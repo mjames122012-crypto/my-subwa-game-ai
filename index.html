@@ -9,25 +9,102 @@
     <link rel="apple-touch-icon" href="icon.png">
 
     <style>
+        :root {
+            --yellow: #ffcc00;
+            --blue: #302ea3;
+            --dark: #121212;
+            --green: #2ecc71;
+        }
+
         body { margin: 0; background: #222; overflow: hidden; font-family: 'Arial Black', sans-serif; display: flex; justify-content: center; touch-action: none; }
         canvas { background: #4e7a3a; border-left: 10px solid #333; border-right: 10px solid #333; max-width: 100vw; height: 100vh; }
-        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); z-index: 10; }
+        
+        .ui-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            background: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.9) 100%); 
+            z-index: 10; 
+        }
+
+        .menu-container { text-align: center; transform: rotate(-2deg); position: relative; }
+
+        .top-icons { position: absolute; top: -100px; width: 100%; display: flex; justify-content: space-between; transform: rotate(2deg); }
+        .icon-btn { background: var(--yellow); border: none; border-radius: 12px; width: 50px; height: 50px; font-size: 25px; cursor: pointer; box-shadow: 0 5px 0 #b38f00; transition: 0.1s; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #b38f00; }
+
+        h1 { color: var(--yellow); font-size: 50px; line-height: 0.9; margin: 0; text-shadow: 4px 4px 0 var(--blue), 8px 8px 20px rgba(0,0,0,0.5); text-transform: uppercase; }
+
+        .stats-preview { background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 50px; margin: 20px 0; color: white; font-size: 14px; border: 1px solid rgba(255,255,255,0.2); transform: rotate(2deg); }
+
+        button.start-btn, button.menu-btn { padding: 15px 40px; font-size: 22px; font-family: 'Arial Black'; background: var(--yellow); color: black; border: none; cursor: pointer; border-radius: 15px; margin: 10px; box-shadow: 0 8px 0 #b38f00; transition: all 0.1s; text-transform: uppercase; }
+        button.start-btn:active, button.menu-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #b38f00; }
+
+        .sub-menu { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 20; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center;}
+        .close-btn { position: absolute; top: 20px; right: 20px; background: red; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-weight: bold; }
+
+        .shop-item { background: #333; padding: 15px; border-radius: 15px; margin: 10px; width: 250px; text-align: center; border: 2px solid var(--yellow); }
+
+        input[type=range] { width: 200px; accent-color: var(--yellow); }
+        input[type=text] { padding: 5px; border-radius: 5px; border: none; text-align: center; width: 120px; font-family: sans-serif; font-weight: bold;}
+
         .stats { position: absolute; top: 20px; right: 20px; color: #fff; text-shadow: 2px 2px #000; font-size: 18px; text-align: right; pointer-events: none; }
-        button { padding: 15px 40px; font-size: 22px; font-family: 'Arial Black'; background: #ffcc00; border: none; cursor: pointer; border-radius: 10px; margin: 10px; transition: 0.2s; }
-        button:hover { transform: scale(1.1); }
-        #pauseBtn { position: absolute; top: 20px; left: 20px; width: 50px; height: 50px; font-size: 25px; z-index: 5; display: none; background: #ffcc00; border-radius: 50%; border: none; cursor: pointer; }
+        #pauseBtn { position: absolute; top: 20px; left: 20px; width: 50px; height: 50px; font-size: 25px; z-index: 5; display: none; background: #ffcc00; border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 4px 0 #b38f00; }
+        #powerupBtn { position: absolute; top: 80px; left: 20px; width: 50px; height: 50px; font-size: 25px; z-index: 5; display: none; background: var(--green); border-radius: 50%; border: 3px solid white; cursor: pointer; box-shadow: 0 4px 0 #1b7a43;}
     </style>
 </head>
 <body>
 
     <div id="startScreen" class="ui-overlay">
-        <img src="icon.png" style="width: 120px; border-radius: 25px; margin-bottom: 15px; border: 4px solid #ffcc00; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
-        <h1 style="color: #ffcc00; font-size: 40px; text-align: center; margin: 0;">AI SUBWAY<br>PRO RUN</h1>
-        <button onclick="startGame()">START</button>
-        <p style="color: white; font-size: 14px; margin-top: 10px;">Swipe zum Bewegen & Ducken</p>
+        <div class="menu-container">
+            <div class="top-icons">
+                <button class="icon-btn" onclick="openMenu('settingsMenu')">⚙️</button>
+                <button class="icon-btn" onclick="openMenu('shopMenu')">🛒</button>
+            </div>
+            <img src="icon.png" style="width: 130px; border-radius: 30px; margin-bottom: 10px; border: 5px solid var(--yellow); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h1 id="titleText">AI SUBWAY<br>PRO RUN</h1>
+            <div class="stats-preview">COINS GESAMT: <span id="totalCoinsDisplay">0</span></div>
+            <button class="start-btn" onclick="startGame()">Start</button>
+        </div>
+    </div>
+
+    <div id="pauseScreen" class="ui-overlay" style="display:none;">
+        <div class="menu-container">
+            <h1 style="font-size: 40px;">PAUSE</h1>
+            <button class="menu-btn" onclick="togglePause()">WEITER</button><br>
+            <button class="menu-btn" style="background:#ff4444; box-shadow: 0 8px 0 #aa0000;" onclick="returnToMenu()">AUFGEBEN</button>
+        </div>
+    </div>
+
+    <div id="settingsMenu" class="sub-menu">
+        <button class="close-btn" onclick="closeMenus()">X</button>
+        <h2>EINSTELLUNGEN</h2>
+        <p>Lautstärke:</p>
+        <input type="range" min="0" max="1" step="0.1" id="volumeSlider" oninput="updateVolume(this.value)">
+        
+        <p style="margin-top:20px;">Steuerung:</p>
+        <div id="keybindSettings">
+            <label>Links: <input type="text" id="keyLeft" value="ArrowLeft" onclick="this.value=''"></label><br>
+            <label>Rechts: <input type="text" id="keyRight" value="ArrowRight" onclick="this.value=''"></label><br>
+            <label>Rutschen: <input type="text" id="keySlide" value="ArrowDown" onclick="this.value=''"></label><br>
+            <button class="menu-btn" style="font-size:16px" onclick="saveKeybinds()">SPEICHERN</button>
+        </div>
+    </div>
+
+    <div id="shopMenu" class="sub-menu">
+        <button class="close-btn" onclick="closeMenus()">X</button>
+        <h2>SHOP</h2>
+        <div class="shop-item">
+            <h3>UNSTERBLICH</h3>
+            <p>Dauer: 5s</p>
+            <p>Preis: 50 Coins</p>
+            <button id="buyGodBtn" class="menu-btn" style="font-size:16px;" onclick="buyGodMode()">KAUFEN</button>
+        </div>
+        <div style="margin-top:20px;">Deine Coins: <span id="shopCoinsDisplay">0</span></div>
     </div>
 
     <button id="pauseBtn" onclick="togglePause()">⏸</button>
+    <button id="powerupBtn" onclick="useGodMode()">🛡️</button>
+
     <div class="stats">
         SCORE: <span id="score">0</span><br>
         COINS: <span id="coins">0</span>
@@ -39,28 +116,105 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
+    const pauseScreen = document.getElementById('pauseScreen');
     const pauseBtn = document.getElementById('pauseBtn');
+    const powerupBtn = document.getElementById('powerupBtn');
+    
+    // Globale Daten
+    let totalCoins = parseInt(localStorage.getItem('subwayTotalCoins')) || 0;
+    let globalVolume = parseFloat(localStorage.getItem('subwayVolume')) || 0.5;
+    let hasGodMode = localStorage.getItem('hasGodMode') === 'true';
+    
+    // Keybinds laden
+    let binds = JSON.parse(localStorage.getItem('subwayBinds')) || {
+        left: 'ArrowLeft',
+        right: 'ArrowRight',
+        slide: 'ArrowDown'
+    };
+
+    function updateUI() {
+        document.getElementById('totalCoinsDisplay').innerText = totalCoins;
+        document.getElementById('shopCoinsDisplay').innerText = totalCoins;
+        document.getElementById('volumeSlider').value = globalVolume;
+        document.getElementById('keyLeft').value = binds.left;
+        document.getElementById('keyRight').value = binds.right;
+        document.getElementById('keySlide').value = binds.slide;
+        const buyBtn = document.getElementById('buyGodBtn');
+        if(hasGodMode) buyBtn.innerText = "GEKAUFT";
+    }
+    updateUI();
 
     canvas.width = 500;
     canvas.height = window.innerHeight;
 
     let score, coins, gameSpeed, isGameOver, isPaused, currentLane, trains, coinPickups, scenery, isSliding, slideTimer, isOnTrain;
     let spawnTimer = 0;
+    let isGodActive = false;
+    let godTimer = 0;
+    let animFrame = 0;
     const lanes = [150, 250, 350];
-    const player = { x: lanes[1], y: canvas.height - 120, skin: '#ffe0bd', shirt: '#ff4444' };
+    const player = { 
+        x: lanes[1], 
+        y: canvas.height - 120, 
+        skinColor: '#ffe0bd',
+        hairColor: '#3d2314',
+        shirtColor: '#e74c3c',
+        shirtColor2: '#c0392b',
+        pantsColor: '#2c3e50',
+        shoeColor: '#1a1a2e',
+        accentColor: '#f39c12'
+    };
 
-    // --- AUDIO SYSTEM ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let musicInterval = null;
     let step = 0;
 
+    // --- UI FUNKTIONEN ---
+    function openMenu(id) { updateUI(); document.getElementById(id).style.display = 'flex'; }
+    function closeMenus() { document.querySelectorAll('.sub-menu').forEach(m => m.style.display = 'none'); }
+    function updateVolume(val) { globalVolume = val; localStorage.setItem('subwayVolume', val); }
+
+    function saveKeybinds() {
+        binds.left = document.getElementById('keyLeft').value;
+        binds.right = document.getElementById('keyRight').value;
+        binds.slide = document.getElementById('keySlide').value;
+        localStorage.setItem('subwayBinds', JSON.stringify(binds));
+        alert("Steuerung gespeichert!");
+    }
+
+    function buyGodMode() {
+        if(hasGodMode) return;
+        if(totalCoins >= 50) {
+            totalCoins -= 50;
+            hasGodMode = true;
+            localStorage.setItem('subwayTotalCoins', totalCoins);
+            localStorage.setItem('hasGodMode', 'true');
+            updateUI();
+            playCoinSound();
+        } else { alert("Nicht genug Coins!"); }
+    }
+
+    function returnToMenu() {
+        isGameOver = true;
+        isPaused = false;
+        if (musicInterval) clearInterval(musicInterval);
+        pauseScreen.style.display = 'none';
+        pauseBtn.style.display = 'none';
+        powerupBtn.style.display = 'none';
+        startScreen.style.display = 'flex';
+        document.getElementById('titleText').innerHTML = "AI SUBWAY<br>PRO RUN";
+        updateUI();
+    }
+
+    // --- AUDIO SYSTEM ---
     function playNote(freq, type, vol, duration) {
+        if(globalVolume <= 0) return;
         try {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol * globalVolume, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + duration);
@@ -89,7 +243,7 @@
         isGameOver = false; isPaused = false;
         currentLane = 1; trains = []; coinPickups = []; scenery = [];
         isSliding = false; slideTimer = 0; isOnTrain = false;
-        spawnTimer = 0;
+        spawnTimer = 0; animFrame = 0; isGodActive = false; godTimer = 0;
         player.x = lanes[1];
     }
 
@@ -97,14 +251,32 @@
         if(audioCtx.state === 'suspended') audioCtx.resume();
         initVariables();
         startScreen.style.display = 'none';
+        pauseScreen.style.display = 'none';
         pauseBtn.style.display = 'block';
+        if(hasGodMode) powerupBtn.style.display = 'block';
         startBeat();
         requestAnimationFrame(gameLoop);
     }
 
+    function useGodMode() {
+        if(!hasGodMode || isGodActive) return;
+        isGodActive = true;
+        godTimer = 300;
+        hasGodMode = false;
+        localStorage.setItem('hasGodMode', 'false');
+        powerupBtn.style.display = 'none';
+        updateUI();
+        playNote(600, 'sine', 0.1, 0.5);
+    }
+
     function update() {
         score++;
+        animFrame++;
         if (score % 500 === 0) gameSpeed += 0.3;
+        if(isGodActive) {
+            godTimer--;
+            if(godTimer <= 0) isGodActive = false;
+        }
 
         spawnTimer--;
         if (spawnTimer <= 0) {
@@ -112,8 +284,7 @@
             const r = Math.random();
             let type = r > 0.85 ? 'bridge' : (r > 0.6 ? 'ramp' : 'train');
             trains.push({ x: lanes[lane] - 35, y: -300, w: 70, h: type === 'bridge' ? 45 : 280, type: type, color: type === 'bridge' ? '#333' : '#777'});
-            let baseRate = 80;
-            spawnTimer = Math.max(25, baseRate - Math.floor(score / 400)); 
+            spawnTimer = Math.max(25, 80 - Math.floor(score / 400)); 
         }
 
         if (Math.random() > 0.96) {
@@ -121,7 +292,7 @@
         }
 
         if (Math.random() > 0.98) {
-            coinPickups.push({ x: lanes[Math.floor(Math.random() * 3)], y: -50, r: 12 });
+            coinPickups.push({ x: lanes[Math.floor(Math.random() * 3)], y: -50, r: 12, rot: 0 });
         }
 
         if (isSliding) { slideTimer--; if (slideTimer <= 0) isSliding = false; }
@@ -135,6 +306,7 @@
                 if (t.type === 'ramp' && player.y > t.y + t.h - 80) currentlyOnAnyTrain = true;
                 else if (isOnTrain && (t.type === 'train' || t.type === 'ramp')) currentlyOnAnyTrain = true;
                 else if (t.type === 'bridge' && isSliding) {} 
+                else if (isGodActive) {}
                 else gameOver();
             }
             if (t.y > canvas.height) trains.splice(i, 1);
@@ -143,7 +315,13 @@
         isOnTrain = currentlyOnAnyTrain;
         coinPickups.forEach((c, i) => {
             c.y += gameSpeed;
-            if (Math.hypot(player.x - c.x, player.y - c.y) < 35) { coins++; playCoinSound(); coinPickups.splice(i, 1); }
+            c.rot += 0.15;
+            if (Math.hypot(player.x - c.x, player.y - c.y) < 35) { 
+                coins++; totalCoins++; 
+                localStorage.setItem('subwayTotalCoins', totalCoins); 
+                playCoinSound(); 
+                coinPickups.splice(i, 1); 
+            }
             if (c.y > canvas.height) coinPickups.splice(i, 1);
         });
 
@@ -151,82 +329,112 @@
         document.getElementById('coins').innerText = coins;
     }
 
+    function drawPlayer(x, y, scale, sliding) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+
+        if(isGodActive) {
+            ctx.shadowBlur = 25;
+            ctx.shadowColor = "rgba(255, 215, 0, 0.9)";
+            const pulse = Math.sin(animFrame * 0.15) * 5 + 30;
+            ctx.strokeStyle = `rgba(255, 215, 0, ${0.3 + Math.sin(animFrame * 0.1) * 0.2})`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, pulse, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        const p = player;
+        const legSwing = Math.sin(animFrame * 0.3) * 8;
+
+        if (sliding) {
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
+            ctx.beginPath(); ctx.ellipse(0, 18, 30, 8, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = p.shirtColor;
+            ctx.beginPath(); ctx.roundRect(-25, -5, 50, 20, 8); ctx.fill();
+            ctx.fillStyle = p.skinColor;
+            ctx.beginPath(); ctx.arc(20, -2, 12, 0, Math.PI * 2); ctx.fill();
+        } else {
+            ctx.fillStyle = "rgba(0,0,0,0.25)";
+            ctx.beginPath(); ctx.ellipse(0, 35, 18, 6, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = p.pantsColor;
+            ctx.fillRect(-12, 5, 8, 25); ctx.fillRect(4, 5, 8, 25);
+            ctx.fillStyle = p.shirtColor;
+            ctx.beginPath(); ctx.roundRect(-18, -15, 36, 35, 10); ctx.fill();
+            ctx.fillStyle = p.skinColor;
+            ctx.beginPath(); ctx.arc(0, -28, 15, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function drawCoin(c) {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.scale(Math.cos(c.rot), 1);
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath(); ctx.arc(0, 0, c.r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#b8860b"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.restore();
+    }
+
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#555"; ctx.fillRect(100, 0, 300, canvas.height);
-
+        
         scenery.forEach(s => {
             if (s.type === 'tree') {
                 ctx.fillStyle = "#3d2b1f"; ctx.fillRect(s.x, s.y, 15, 30);
                 ctx.fillStyle = "#2d5a27"; ctx.beginPath(); ctx.arc(s.x + 7, s.y - 5, 25, 0, Math.PI*2); ctx.fill();
-            } else {
-                ctx.fillStyle = "#aaa"; ctx.fillRect(s.x + 5, s.y, 5, 40);
-                const colors = ["#ff4444", "#4444ff", "#ffcc00"];
-                ctx.fillStyle = colors[s.signType]; ctx.beginPath();
-                if (s.signType === 0) ctx.arc(s.x + 7, s.y, 15, 0, Math.PI * 2); else ctx.rect(s.x - 8, s.y - 15, 30, 20);
-                ctx.fill(); ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
             }
         });
 
         trains.forEach(t => {
             ctx.fillStyle = t.color; ctx.fillRect(t.x, t.y, t.w, t.h);
             if (t.type === 'ramp') { ctx.fillStyle = "#c2b280"; ctx.fillRect(t.x, t.y + t.h - 80, t.w, 80); }
-            if (t.type === 'bridge') { 
-                ctx.fillStyle = "yellow"; ctx.fillRect(t.x, t.y + t.h - 5, t.w, 5);
-                ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(t.x, t.y, t.w, t.h);
-            }
         });
 
-        ctx.fillStyle = "#ffd700";
-        coinPickups.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.fill(); });
-        
-        const x = player.x, y = player.y, scale = isOnTrain ? 1.3 : 1.0;
-        ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
-        if (isSliding) {
-            ctx.fillStyle = player.shirt; ctx.beginPath(); ctx.ellipse(0, 10, 25, 8, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = player.skin; ctx.beginPath(); ctx.arc(10, 5, 10, 0, Math.PI * 2); ctx.fill();
-        } else {
-            ctx.fillStyle = player.shirt; ctx.beginPath(); ctx.ellipse(0, 5, 20, 12, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = player.skin; ctx.beginPath(); ctx.arc(0, -5, 12, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = "#442200"; ctx.beginPath(); ctx.arc(0, -7, 10, Math.PI, 0); ctx.fill();
-        }
-        ctx.restore();
+        coinPickups.forEach(c => drawCoin(c));
+        drawPlayer(player.x, player.y, isOnTrain ? 1.3 : 1.0, isSliding);
     }
 
     function gameOver() {
         if (isGameOver) return;
         isGameOver = true; playDeathSound();
         if (musicInterval) clearInterval(musicInterval);
+        document.getElementById('totalCoinsDisplay').innerText = totalCoins;
+        document.getElementById('titleText').innerHTML = "BUSTED!<br><small>Score: "+Math.floor(score/10)+"</small>";
         startScreen.style.display = 'flex';
-        document.querySelector('#startScreen h1').innerHTML = "BUSTED!<br><small>Final Score: "+Math.floor(score/10)+"</small>";
     }
 
     function togglePause() { 
         isPaused = !isPaused; 
-        if(!isPaused) requestAnimationFrame(gameLoop);
+        if(isPaused) { pauseScreen.style.display = 'flex'; } 
+        else { pauseScreen.style.display = 'none'; requestAnimationFrame(gameLoop); }
     }
 
     function gameLoop() { if (!isGameOver && !isPaused) { update(); draw(); requestAnimationFrame(gameLoop); } }
 
     window.addEventListener('keydown', (e) => {
         if (isGameOver || isPaused) return;
-        if ((e.code === 'ArrowLeft' || e.code === 'KeyA') && currentLane > 0) currentLane--;
-        if ((e.code === 'ArrowRight' || e.code === 'KeyD') && currentLane < 2) currentLane++;
-        if (e.code === 'ArrowDown' || e.code === 'KeyS') { isSliding = true; slideTimer = 40; }
+        if (e.code === binds.left && currentLane > 0) currentLane--;
+        if (e.code === binds.right && currentLane < 2) currentLane++;
+        if (e.code === binds.slide) { isSliding = true; slideTimer = 40; }
         player.x = lanes[currentLane];
     });
 
-    let tSX = 0, tSY = 0;
-    window.addEventListener('touchstart', (e) => { tSX = e.touches[0].clientX; tSY = e.touches[0].clientY; });
+    let tSX = 0;
+    window.addEventListener('touchstart', (e) => { tSX = e.touches[0].clientX; });
     window.addEventListener('touchend', (e) => {
+        if(isPaused || isGameOver) return;
         let dX = e.changedTouches[0].clientX - tSX;
-        let dY = e.changedTouches[0].clientY - tSY;
-        if (Math.abs(dX) > Math.abs(dY)) {
+        if (Math.abs(dX) > 30) {
             if (dX > 30 && currentLane < 2) currentLane++;
             if (dX < -30 && currentLane > 0) currentLane--;
-        } else if (dY > 30) { isSliding = true; slideTimer = 40; }
+        } else { isSliding = true; slideTimer = 40; }
         player.x = lanes[currentLane];
     });
 </script>
 </body>
 </html>
+
